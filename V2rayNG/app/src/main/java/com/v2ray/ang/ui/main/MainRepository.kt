@@ -22,12 +22,17 @@ import com.v2ray.ang.handler.MmkvManager
 import com.v2ray.ang.handler.SettingsManager
 import com.v2ray.ang.handler.SubscriptionUpdater
 import com.v2ray.ang.helper.MessageHelper
+import com.v2ray.ang.util.JsonUtil
 import com.v2ray.ang.util.LogUtil
 import com.v2ray.ang.util.Utils
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
+import okhttp3.MediaType.Companion.toMediaType
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import okhttp3.RequestBody.Companion.toRequestBody
 import java.util.concurrent.atomic.AtomicBoolean
 
 class MainRepository(
@@ -224,5 +229,72 @@ class MainRepository(
 
     override fun initAssets() {
         SettingsManager.initAssets(app, app.assets)
+    }
+
+    override fun getVpnUserEmail(): String =
+        MmkvManager.decodeSettingsString(AppConfig.PREF_VPN_USER_EMAIL, "").orEmpty()
+
+    override fun getVpnAccessToken(): String =
+        MmkvManager.decodeSettingsString(AppConfig.PREF_VPN_ACCESS_TOKEN, "").orEmpty()
+
+    override fun saveVpnUser(email: String, token: String) {
+        MmkvManager.encodeSettings(AppConfig.PREF_VPN_USER_EMAIL, email)
+        MmkvManager.encodeSettings(AppConfig.PREF_VPN_ACCESS_TOKEN, token)
+    }
+
+    override fun clearVpnUser() {
+        MmkvManager.removeSettings(AppConfig.PREF_VPN_USER_EMAIL)
+        MmkvManager.removeSettings(AppConfig.PREF_VPN_ACCESS_TOKEN)
+    }
+
+    override suspend fun vpnAuth(email: String, password: String, isRegister: Boolean): Result<String> {
+        val client = OkHttpClient()
+        val mediaType = "application/json; charset=utf-8".toMediaType()
+        val path = if (isRegister) "/v1/vpn/auth/register" else "/v1/vpn/auth/login"
+        val json = JsonUtil.toJson(mapOf("email" to email, "password" to password))
+        val request = Request.Builder()
+            .url("${AppConfig.VPN_API_BASE_URL}$path")
+            .post(json.toRequestBody(mediaType))
+            .build()
+
+        return try {
+            client.newCall(request).execute().use { response ->
+                val body = response.body?.string() ?: ""
+                if (response.isSuccessful) {
+                    val token = JsonUtil.parseString(body)?.get("access_token")?.asString ?: ""
+                    Result.success(token)
+                } else {
+                    val error = JsonUtil.parseString(body)?.get("error")?.asString ?: response.message
+                    Result.failure(Exception(error))
+                }
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    override suspend fun fetchVpnNodes(): Result<String> {
+        val token = getVpnAccessToken()
+        if (token.isEmpty()) return Result.failure(Exception("Not logged in"))
+
+        val client = OkHttpClient()
+        val request = Request.Builder()
+            .url("${AppConfig.VPN_API_BASE_URL}/v1/vpn/nodes")
+            .header("Authorization", "Bearer $token")
+            .get()
+            .build()
+
+        return try {
+            client.newCall(request).execute().use { response ->
+                val body = response.body?.string() ?: ""
+                if (response.isSuccessful) {
+                    Result.success(body)
+                } else {
+                    Result.failure(Exception(response.message))
+                }
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
     }
 }

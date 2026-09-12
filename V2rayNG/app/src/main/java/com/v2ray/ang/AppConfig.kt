@@ -90,6 +90,10 @@ object AppConfig {
     const val PREF_AUTO_SORT_AFTER_TEST = "pref_auto_sort_after_test"
     const val PREF_REAL_PING_CONCURRENCY = "pref_real_ping_concurrency"
 
+    const val PREF_VPN_USER_EMAIL = "pref_vpn_user_email"
+    const val PREF_VPN_ACCESS_TOKEN = "pref_vpn_access_token"
+    const val VPN_API_BASE_URL = "https://api.mianshitongguo.com"
+
     /** Cache keys. */
     const val CACHE_SUBSCRIPTION_ID = "cache_subscription_id"
 

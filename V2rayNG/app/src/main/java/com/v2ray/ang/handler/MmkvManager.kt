@@ -128,13 +128,6 @@ object MmkvManager {
         return referencedServers
     }
 
-    /**
-     * Checks if the settings storage contains the given key.
-     */
-    fun settingsContainsKey(key: String): Boolean {
-        return settingsStorage.containsKey(key)
-    }
-
     //endregion
 
     /**
@@ -623,13 +616,6 @@ object MmkvManager {
         }
     }
 
-    /**
-     * Checks if the settings storage contains the given key.
-     */
-    fun settingsContainsKey(key: String): Boolean {
-        return settingsStorage.containsKey(key)
-    }
-
     //endregion
 
     //region Subscriptions
@@ -737,13 +723,6 @@ object MmkvManager {
         }
     }
 
-    /**
-     * Checks if the settings storage contains the given key.
-     */
-    fun settingsContainsKey(key: String): Boolean {
-        return settingsStorage.containsKey(key)
-    }
-
     //endregion
 
     //region Asset
@@ -796,13 +775,6 @@ object MmkvManager {
         return JsonUtil.fromJsonSafe(json, AssetUrlItem::class.java)
     }
 
-    /**
-     * Checks if the settings storage contains the given key.
-     */
-    fun settingsContainsKey(key: String): Boolean {
-        return settingsStorage.containsKey(key)
-    }
-
     //endregion
 
     //region Routing
@@ -828,13 +800,6 @@ object MmkvManager {
             encodeSettings(PREF_ROUTING_RULESET, "")
         else
             encodeSettings(PREF_ROUTING_RULESET, JsonUtil.toJson(rulesetList))
-    }
-
-    /**
-     * Checks if the settings storage contains the given key.
-     */
-    fun settingsContainsKey(key: String): Boolean {
-        return settingsStorage.containsKey(key)
     }
 
     //endregion
@@ -1011,6 +976,15 @@ object MmkvManager {
     }
 
     /**
+     * Removes the settings.
+     *
+     * @param key The settings key.
+     */
+    fun removeSettings(key: String) {
+        settingsStorage.removeValueForKey(key)
+    }
+
+    /**
      * Checks if the settings storage contains the given key.
      */
     fun settingsContainsKey(key: String): Boolean {
@@ -1034,13 +1008,6 @@ object MmkvManager {
     fun decodeWebDavConfig(): WebDavConfig? {
         val json = mainStorage.decodeString(KEY_WEBDAV_CONFIG) ?: return null
         return JsonUtil.fromJsonSafe(json, WebDavConfig::class.java)
-    }
-
-    /**
-     * Checks if the settings storage contains the given key.
-     */
-    fun settingsContainsKey(key: String): Boolean {
-        return settingsStorage.containsKey(key)
     }
 
     //endregion
@@ -1093,13 +1060,6 @@ object MmkvManager {
                 }
         }
         return state
-    }
-
-    /**
-     * Checks if the settings storage contains the given key.
-     */
-    fun settingsContainsKey(key: String): Boolean {
-        return settingsStorage.containsKey(key)
     }
 
     //endregion

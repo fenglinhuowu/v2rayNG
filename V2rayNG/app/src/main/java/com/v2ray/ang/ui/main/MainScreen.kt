@@ -48,6 +48,9 @@ fun MainScreen(
     val doubleColumnDisplay = uiState.doubleColumnDisplay
     val confirmRemove = uiState.confirmRemove
     val shareQRCodeBitmap = uiState.shareQRCodeBitmap
+    val isLoggedIn = uiState.isLoggedIn
+    val vpnUserEmail = uiState.vpnUserEmail
+    val showAuthDialog = uiState.showAuthDialog
 
     val isDarkTheme = LocalDarkTheme.current
     val drawerState = rememberDrawerState(DrawerValue.Closed)
@@ -130,6 +133,14 @@ fun MainScreen(
         QRCodeDialog(bitmap = shareQRCodeBitmap, onDismiss = { onAction(MainAction.DismissQRCodeDialog) })
     }
 
+    if (showAuthDialog) {
+        AuthDialog(
+            onDismiss = { onAction(MainAction.DismissAuthDialog) },
+            onLogin = { email, password -> onAction(MainAction.AuthLogin(email, password)) },
+            onRegister = { email, password -> onAction(MainAction.AuthRegister(email, password)) }
+        )
+    }
+
     ModalNavigationDrawer(
         drawerState = drawerState,
         drawerContent = {
@@ -147,6 +158,7 @@ fun MainScreen(
             topBar = {
                 MainTopBar(
                     isLoading = isLoading,
+                    isLoggedIn = isLoggedIn,
                     showSearch = showSearch,
                     searchQuery = searchQuery,
                     onSearchQueryChange = { query: String ->
@@ -173,6 +185,7 @@ fun MainScreen(
                             MainMoreMenuAction.TestAll -> onAction(MainAction.TestAllServers)
                             MainMoreMenuAction.TestAllRealPing -> onAction(MainAction.TestRealAllServers)
                             MainMoreMenuAction.UpdateSubscriptions -> onAction(MainAction.UpdateSubscriptions)
+                            MainMoreMenuAction.Logout -> onAction(MainAction.Logout)
                         }
                     }
                 )

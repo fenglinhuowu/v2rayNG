@@ -10,6 +10,9 @@
     <string name="action_stop_service">Stop service</string>
     <string name="action_ok">OK</string>
     <string name="action_cancel">Cancel</string>
+    <string name="action_login">Login</string>
+    <string name="action_register">Register</string>
+    <string name="action_logout">Logout</string>
     <string name="migration_fail">Data migration failed!</string>
     <string name="pull_down_to_refresh">Please pull down to refresh!</string>
 
@@ -401,6 +404,16 @@
 
     <string name="import_subscription_success">Subscription imported successfully</string>
     <string name="import_subscription_failure">Import subscription failed</string>
+
+    <string name="title_auth">Register / Login</string>
+    <string name="auth_email">Email</string>
+    <string name="auth_password">Password (6 digits)</string>
+    <string name="menu_item_auth">Auth</string>
+    <string name="menu_item_refresh_nodes">Refresh Nodes</string>
+    <string name="toast_login_success">Login successful</string>
+    <string name="toast_register_success">Registration successful</string>
+    <string name="toast_logout_success">Logged out</string>
+    <string name="toast_fetch_nodes_success">Nodes links copied to clipboard</string>
     <string name="title_fragment_settings">Fragment Settings</string>
     <string name="title_pref_fragment_packets">Fragment Packets</string>
     <string name="title_pref_fragment_length">Fragment Length (min-max)</string>

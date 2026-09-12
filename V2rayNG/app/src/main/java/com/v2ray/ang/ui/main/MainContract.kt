@@ -26,7 +26,10 @@ data class MainUiState(
     val locateTarget: LocateTarget? = null,
     val confirmRemove: Boolean = false,
     val doubleColumnDisplay: Boolean = false,
-    val shareQRCodeBitmap: android.graphics.Bitmap? = null
+    val shareQRCodeBitmap: android.graphics.Bitmap? = null,
+    val isLoggedIn: Boolean = false,
+    val vpnUserEmail: String = "",
+    val showAuthDialog: Boolean = false
 )
 
 /**
@@ -67,4 +70,11 @@ sealed interface MainAction {
     data class ImportBatchConfig(val configText: String) : MainAction
 
     data object LocateHandled : MainAction
+
+    data object ShowAuthDialog : MainAction
+    data object DismissAuthDialog : MainAction
+    data class AuthLogin(val email: String, val password: String) : MainAction
+    data class AuthRegister(val email: String, val password: String) : MainAction
+    data object RefreshNodes : MainAction
+    data object Logout : MainAction
 }

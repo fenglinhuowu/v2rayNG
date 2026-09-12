@@ -55,7 +55,9 @@ class MainViewModel(
             selectedGroupId = dataSource.getSelectedSubscriptionId(),
             selectedGuid = dataSource.getSelectServer(),
             confirmRemove = dataSource.getConfirmRemove(),
-            doubleColumnDisplay = dataSource.getDoubleColumnDisplay()
+            doubleColumnDisplay = dataSource.getDoubleColumnDisplay(),
+            isLoggedIn = dataSource.getVpnAccessToken().isNotEmpty(),
+            vpnUserEmail = dataSource.getVpnUserEmail()
         )
     )
     val uiState: StateFlow<MainUiState> = _uiState.asStateFlow()
@@ -215,6 +217,13 @@ class MainViewModel(
             MainAction.DismissQRCodeDialog -> {
                 _uiState.update { it.copy(shareQRCodeBitmap = null) }
             }
+
+            MainAction.ShowAuthDialog -> _uiState.update { it.copy(showAuthDialog = true) }
+            MainAction.DismissAuthDialog -> _uiState.update { it.copy(showAuthDialog = false) }
+            is MainAction.AuthLogin -> vpnAuth(action.email.lowercase().trim(), action.password, false)
+            is MainAction.AuthRegister -> vpnAuth(action.email.lowercase().trim(), action.password, true)
+            MainAction.RefreshNodes -> refreshVpnNodes()
+            MainAction.Logout -> logout()
 
             MainAction.ToggleService,
             MainAction.TestCurrentServer,
@@ -808,6 +817,56 @@ class MainViewModel(
 
     private fun consumeLocateTarget() {
         _uiState.update { it.copy(locateTarget = null) }
+    }
+
+    private fun vpnAuth(email: String, password: String, isRegister: Boolean) {
+        launchLoading {
+            withContext(ioDispatcher) {
+                val result = dataSource.vpnAuth(email, password, isRegister)
+                withContext(Dispatchers.Main) {
+                    result.onSuccess { token ->
+                        dataSource.saveVpnUser(email, token)
+                        _uiState.update {
+                            it.copy(
+                                isLoggedIn = true,
+                                vpnUserEmail = email,
+                                showAuthDialog = false
+                            )
+                        }
+                        toastSuccess(if (isRegister) R.string.toast_register_success else R.string.toast_login_success)
+                        refreshVpnNodes()
+                    }.onFailure {
+                        toastError(it.message ?: "Auth failed")
+                    }
+                }
+            }
+        }
+    }
+
+    private fun refreshVpnNodes() {
+        launchLoading {
+            withContext(ioDispatcher) {
+                val result = dataSource.fetchVpnNodes()
+                withContext(Dispatchers.Main) {
+                    result.onSuccess { nodes ->
+                        if (nodes.isNotEmpty()) {
+                            Utils.setClipboard(app, nodes)
+                            toastSuccess(R.string.toast_fetch_nodes_success)
+                        } else {
+                            toast(R.string.toast_none_data)
+                        }
+                    }.onFailure {
+                        toastError(it.message ?: "Fetch nodes failed")
+                    }
+                }
+            }
+        }
+    }
+
+    private fun logout() {
+        dataSource.clearVpnUser()
+        _uiState.update { it.copy(isLoggedIn = false, vpnUserEmail = "") }
+        toast(R.string.toast_logout_success)
     }
 
     // ---------- Running state ----------

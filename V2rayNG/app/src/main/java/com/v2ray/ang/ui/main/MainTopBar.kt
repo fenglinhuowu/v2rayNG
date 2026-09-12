@@ -30,6 +30,7 @@ import com.v2ray.ang.ui.compose.verticalScrollbar
 @Composable
 fun MainTopBar(
     isLoading: Boolean,
+    isLoggedIn: Boolean,
     showSearch: Boolean,
     searchQuery: String,
     onSearchQueryChange: (String) -> Unit,
@@ -69,6 +70,15 @@ fun MainTopBar(
         },
         actions = {
             if (!showSearch) {
+                if (!isLoggedIn) {
+                    IconButton(onClick = { onAction(MainAction.ShowAuthDialog) }) {
+                        Icon(painterResource(R.drawable.ic_lock_24dp), contentDescription = stringResource(R.string.menu_item_auth))
+                    }
+                } else {
+                    IconButton(onClick = { onAction(MainAction.RefreshNodes) }) {
+                        Icon(painterResource(R.drawable.ic_restore_24dp), contentDescription = stringResource(R.string.menu_item_refresh_nodes))
+                    }
+                }
                 IconButton(onClick = { onSearchToggle(true) }) {
                     Icon(painterResource(R.drawable.ic_search_24dp), contentDescription = stringResource(R.string.acc_search))
                 }
@@ -107,7 +117,7 @@ fun MainTopBar(
                         .heightIn(max = maxMenuHeight)
                         .verticalScrollbar(moreMenuScrollState)
                 ) {
-                    MoreMenuContent { action ->
+                    MoreMenuContent(isLoggedIn) { action ->
                         showMenu = false
                         onMoreMenuAction(action)
                     }

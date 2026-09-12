@@ -63,4 +63,12 @@ interface MainDataSource : Closeable {
 
     fun syncSubscriptions()
     fun initAssets()
+
+    fun getVpnUserEmail(): String
+    fun getVpnAccessToken(): String
+    fun saveVpnUser(email: String, token: String)
+    fun clearVpnUser()
+
+    suspend fun vpnAuth(email: String, password: String, isRegister: Boolean): Result<String>
+    suspend fun fetchVpnNodes(): Result<String>
 }
