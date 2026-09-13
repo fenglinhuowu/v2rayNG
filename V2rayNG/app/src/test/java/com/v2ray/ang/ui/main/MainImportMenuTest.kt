@@ -7,18 +7,17 @@ class MainImportMenuTest {
 
     @Test
     fun regularShareMenuContainsOnlyShareActions() {
-        val expected = listOf(
-            ServerMenuAction.ShareQRCode,
-            ServerMenuAction.ShareClipboard,
-            ServerMenuAction.ShareFullContent,
-        )
-        assertEquals(expected, serverMenuActions(isComplexProfile = false, includeManagementActions = false))
+        assertEquals(emptyList<ServerMenuAction>(), serverMenuActions(isComplexProfile = false, includeManagementActions = false))
     }
 
     @Test
     fun regularMoreMenuContainsEveryActionInDisplayOrder() {
+        val expected = listOf(
+            ServerMenuAction.Edit,
+            ServerMenuAction.Delete,
+        )
         assertEquals(
-            ServerMenuAction.entries,
+            expected,
             serverMenuActions(isComplexProfile = false, includeManagementActions = true),
         )
     }
@@ -26,7 +25,7 @@ class MainImportMenuTest {
     @Test
     fun complexShareMenuContainsOnlyFullContent() {
         assertEquals(
-            listOf(ServerMenuAction.ShareFullContent),
+            emptyList<ServerMenuAction>(),
             serverMenuActions(isComplexProfile = true, includeManagementActions = false),
         )
     }
@@ -34,7 +33,6 @@ class MainImportMenuTest {
     @Test
     fun complexMoreMenuRetainsManagementActions() {
         val expected = listOf(
-            ServerMenuAction.ShareFullContent,
             ServerMenuAction.Edit,
             ServerMenuAction.Delete,
         )

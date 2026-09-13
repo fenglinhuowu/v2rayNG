@@ -139,95 +139,46 @@ private fun ServerListPage(
     onMoveServer: (Int, Int) -> Unit,
     contentPadding: PaddingValues
 ) {
-    if (doubleColumnDisplay) {
-        val gridState = remember(groupId) {
-            lazyGridStates.getOrPut(groupId) { LazyGridState() }
+    val gridState = remember(groupId) {
+        lazyGridStates.getOrPut(groupId) { LazyGridState() }
+    }
+    val reorderableGridState = if (canReorder) {
+        rememberReorderableLazyGridState(gridState) { from, to ->
+            onMoveServer(from.index, to.index)
         }
-        val reorderableGridState = if (canReorder) {
-            rememberReorderableLazyGridState(gridState) { from, to ->
-                onMoveServer(from.index, to.index)
+    } else null
+
+    LocateTargetEffect(locateTarget, rows, gridState, onLocateHandled)
+
+    LazyVerticalGrid(
+        columns = GridCells.Fixed(2),
+        state = gridState,
+        modifier = Modifier
+            .fillMaxSize()
+            .verticalScrollbar(gridState),
+        contentPadding = contentPadding
+    ) {
+        itemsIndexed(items = rows, key = { _, item -> item.guid }) { _, row ->
+            val content: @Composable () -> Unit = {
+                ServerItemColumn(
+                    row = row,
+                    isSelected = row.guid == selectedGuid,
+                    doubleColumnDisplay = true,
+                    actions = actions
+                )
             }
-        } else null
-
-        LocateTargetEffect(locateTarget, rows, gridState, onLocateHandled)
-
-        LazyVerticalGrid(
-            columns = GridCells.Fixed(2),
-            state = gridState,
-            modifier = Modifier
-                .fillMaxSize()
-                .verticalScrollbar(gridState),
-            contentPadding = contentPadding
-        ) {
-            itemsIndexed(items = rows, key = { _, item -> item.guid }) { _, row ->
-                val content: @Composable () -> Unit = {
-                    ServerItemColumn(
-                        row = row,
-                        isSelected = row.guid == selectedGuid,
-                        doubleColumnDisplay = true,
-                        actions = actions
-                    )
+            if (canReorder && reorderableGridState != null) {
+                ReorderableItem(
+                    reorderableGridState,
+                    key = row.guid
+                ) { isDragging ->
+                    ReorderableGridItem(
+                        scope = this,
+                        isDragging = isDragging
+                    ) { content() }
                 }
-                if (canReorder && reorderableGridState != null) {
-                    ReorderableItem(
-                        reorderableGridState,
-                        key = row.guid
-                    ) { isDragging ->
-                        ReorderableGridItem(
-                            scope = this,
-                            isDragging = isDragging
-                        ) { content() }
-                    }
-                } else {
-                    content()
-                }
-            }
-        }
-    } else {
-        val listState = remember(groupId) {
-            lazyListStates.getOrPut(groupId) { LazyListState() }
-        }
-        val reorderableState = if (canReorder) {
-            rememberReorderableLazyListState(listState) { from, to ->
-                onMoveServer(from.index, to.index)
-            }
-        } else null
-
-        LocateTargetEffect(locateTarget, rows, listState, onLocateHandled)
-
-        LazyColumn(
-            state = listState,
-            modifier = Modifier
-                .fillMaxSize()
-                .verticalScrollbar(listState),
-            contentPadding = contentPadding
-        ) {
-            itemsIndexed(items = rows, key = { _, item -> item.guid }) { _, row ->
-                if (canReorder && reorderableState != null) {
-                    ReorderableItem(
-                        reorderableState,
-                        key = row.guid
-                    ) { isDragging ->
-                        ReorderableListItem(
-                            scope = this,
-                            isDragging = isDragging
-                        ) {
-                            ServerItemRow(
-                                row = row,
-                                isSelected = row.guid == selectedGuid,
-                                actions = actions
-                            )
-                        }
-                        ItemDivider()
-                    }
-                } else {
-                    ServerItemRow(
-                        row = row,
-                        isSelected = row.guid == selectedGuid,
-                        actions = actions
-                    )
-                    ItemDivider()
-                }
+            } else {
+                content()
             }
         }
     }
@@ -309,105 +260,65 @@ private fun ServerListItem(
     } else {
         stringResource(R.string.server_test_delay_value, row.testDelayMillis)
     }
-    val selectedStateDescription = if (isSelected) {
-        stringResource(R.string.acc_selected_server)
-    } else {
-        null
-    }
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .height(IntrinsicSize.Min)
-            .semantics {
-                if (selectedStateDescription != null) {
-                    stateDescription = selectedStateDescription
-                }
-            }
             .clickable { actions.select(row.guid) }
+            .padding(horizontal = 8.dp, vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically
     ) {
-        Box(
-            Modifier
-                .width(10.dp)
-                .fillMaxHeight()
-        ) {
-            if (isSelected) {
-                Row {
-                    Spacer(Modifier.width(6.dp))
-                    Box(
-                        Modifier
-                            .width(4.dp)
-                            .fillMaxHeight()
-                            .padding(vertical = 10.dp)
-                            .background(MaterialTheme.colorScheme.primary)
+        if (isSelected) {
+            Box(
+                Modifier
+                    .width(3.dp)
+                    .height(20.dp)
+                    .background(MaterialTheme.colorScheme.primary, CircleShape)
+            )
+            Spacer(Modifier.width(8.dp))
+        }
+
+        Text(
+            text = row.remarks,
+            modifier = Modifier.weight(1f),
+            style = MaterialTheme.typography.bodyMedium,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
+        )
+
+        Spacer(Modifier.width(8.dp))
+
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Column(horizontalAlignment = Alignment.End) {
+                if (testResult.isNotEmpty()) {
+                    Text(
+                        text = testResult,
+                        style = MaterialTheme.typography.labelSmall,
+                        color = if (row.testDelayMillis < 0L) colorPingRed else colorPing,
+                        maxLines = 1
+                    )
+                }
+                if (row.statistics.isNotEmpty()) {
+                    Text(
+                        text = row.statistics,
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
                     )
                 }
             }
-        }
-
-        Column(
-            Modifier
-                .weight(1f)
-                .padding(start = 8.dp, end = 12.dp, top = 8.dp, bottom = 8.dp)
-        ) {
-            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                Text(row.remarks, Modifier.weight(1f), style = MaterialTheme.typography.bodyLarge.copy(lineBreak = LineBreak.Paragraph), maxLines = 2, overflow = TextOverflow.Ellipsis)
-                if (doubleColumnDisplay) {
-                    IconButton(onClick = { actions.more(row.guid, row.profile) }, Modifier.size(36.dp)) {
-                        Icon(
-                            painterResource(R.drawable.ic_more_vert_24dp),
-                            stringResource(R.string.acc_more),
-                            Modifier.size(24.dp)
-                        )
-                    }
-                } else {
-                    IconButton(onClick = { actions.share(row.guid, row.profile) }, Modifier.size(36.dp)) {
-                        Icon(
-                            painterResource(R.drawable.ic_share_24dp),
-                            stringResource(R.string.title_configuration_share),
-                            Modifier.size(24.dp)
-                        )
-                    }
-                    IconButton(onClick = { actions.edit(row.guid, row.profile) }, Modifier.size(36.dp)) {
-                        Icon(
-                            painterResource(R.drawable.ic_edit_24dp),
-                            stringResource(R.string.acc_edit),
-                            Modifier.size(24.dp)
-                        )
-                    }
-                    IconButton(onClick = { actions.remove(row.guid) }, Modifier.size(36.dp)) {
-                        Icon(
-                            painterResource(R.drawable.ic_delete_24dp),
-                            stringResource(R.string.acc_delete),
-                            Modifier.size(24.dp)
-                        )
-                    }
-                }
-            }
-            Spacer(modifier = Modifier.height(6.dp))
-            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                if (row.subscriptionBadge.isNotBlank()) {
-                    Box(
-                        Modifier
-                            .size(24.dp)
-                            .clip(CircleShape)
-                            .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)), Alignment.Center
-                    ) {
-                        Text(row.subscriptionBadge.uppercase(), fontSize = 11.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
-                    }
-                }
-                Text(
-                    row.statistics,
-                    Modifier.weight(1f),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
+            Spacer(Modifier.width(4.dp))
+            IconButton(
+                onClick = { actions.remove(row.guid) },
+                modifier = Modifier.size(32.dp)
+            ) {
+                Icon(
+                    painter = painterResource(R.drawable.ic_delete_24dp),
+                    contentDescription = stringResource(R.string.acc_delete),
+                    modifier = Modifier.size(18.dp),
+                    tint = MaterialTheme.colorScheme.error
                 )
-            }
-            Spacer(modifier = Modifier.height(6.dp))
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                Text(row.typeDescription, style = MaterialTheme.typography.bodySmall, color = colorConfigType, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                Text(testResult, style = MaterialTheme.typography.bodySmall, color = if (row.testDelayMillis < 0L) colorPingRed else colorPing, maxLines = 1, overflow = TextOverflow.Ellipsis)
             }
         }
     }

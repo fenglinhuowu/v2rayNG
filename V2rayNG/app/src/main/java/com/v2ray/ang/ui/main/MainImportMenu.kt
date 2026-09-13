@@ -37,7 +37,9 @@ enum class MainMoreMenuAction(@StringRes val labelRes: Int) {
     TestAll(R.string.title_ping_all_server),
     TestAllRealPing(R.string.title_real_ping_all_server),
     UpdateSubscriptions(R.string.title_sub_update),
-    Logout(R.string.action_logout)
+    Logout(R.string.action_logout),
+    PerAppProxy(R.string.per_app_proxy_settings),
+    Settings(R.string.title_settings)
 }
 
 internal enum class ServerMenuAction(
@@ -56,7 +58,7 @@ internal fun serverMenuActions(
     isComplexProfile: Boolean,
     includeManagementActions: Boolean,
 ): List<ServerMenuAction> = ServerMenuAction.entries.filter { action ->
-    (includeManagementActions || action.isShareAction) && (!isComplexProfile || action.supportsComplexProfiles)
+    !action.isShareAction && (includeManagementActions || action.isShareAction) && (!isComplexProfile || action.supportsComplexProfiles)
 }
 
 @Composable
@@ -68,7 +70,13 @@ fun ImportMenuContent(onAction: (MainAction) -> Unit) = AppDropdownMenuItems(
 
 @Composable
 fun MoreMenuContent(isLoggedIn: Boolean, onSelected: (MainMoreMenuAction) -> Unit) = AppDropdownMenuItems(
-    items = if (isLoggedIn) MainMoreMenuAction.entries else MainMoreMenuAction.entries.filter { it != MainMoreMenuAction.Logout },
+    items = listOf(
+        MainMoreMenuAction.RestartService,
+        MainMoreMenuAction.DeleteAll,
+        MainMoreMenuAction.TestAllRealPing,
+        MainMoreMenuAction.PerAppProxy,
+        MainMoreMenuAction.Settings
+    ),
     labelRes = { it.labelRes },
     onSelected = onSelected
 )

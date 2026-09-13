@@ -186,6 +186,8 @@ fun MainScreen(
                             MainMoreMenuAction.TestAllRealPing -> onAction(MainAction.TestRealAllServers)
                             MainMoreMenuAction.UpdateSubscriptions -> onAction(MainAction.UpdateSubscriptions)
                             MainMoreMenuAction.Logout -> onAction(MainAction.Logout)
+                            MainMoreMenuAction.PerAppProxy -> onNavigate(MainDestination.PerAppProxy)
+                            MainMoreMenuAction.Settings -> onNavigate(MainDestination.Settings)
                         }
                     }
                 )

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name" translatable="false">v2rayNG</string>
+    <string name="app_name" translatable="false">App</string>
     <string name="app_widget_name">Switch</string>
     <string name="app_tile_name">Switch</string>
     <string name="app_tile_first_use">Add a profile in the app before using this feature.</string>
@@ -323,7 +323,7 @@
     <string name="logcat_clear">Clear</string>
     <string name="logcat_share">Share log</string>
     <string name="title_service_restart">Restart service</string>
-    <string name="title_del_all_config">Delete configs</string>
+    <string name="title_del_all_config">Clear list</string>
     <string name="title_del_duplicate_config">Delete duplicate configs</string>
     <string name="title_del_invalid_config">Delete invalid configs</string>
     <string name="title_export_all">Export configs to clipboard</string>
@@ -344,7 +344,7 @@
     <string name="toast_invalid_update_interval">Invalid update interval. Minimum is 15 minutes.</string>
     <string name="title_sub_update">Update subscription</string>
     <string name="title_ping_all_server">Test TCP delays (TCPing)</string>
-    <string name="title_real_ping_all_server">Test real delays</string>
+    <string name="title_real_ping_all_server">Speed test</string>
     <string name="title_user_asset_setting">Asset files</string>
     <string name="title_sort_by_test_results">Sort by test results</string>
     <string name="title_filter_config">Filter configs</string>

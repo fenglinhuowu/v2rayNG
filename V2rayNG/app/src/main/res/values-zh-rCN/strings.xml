@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name" translatable="false">v2rayNG</string>
+    <string name="app_name" translatable="false">App</string>
     <string name="app_widget_name">开关</string>
     <string name="app_tile_name">开关</string>
     <string name="app_tile_first_use">初次使用此功能请先用 APP 添加配置</string>
@@ -320,7 +320,7 @@
     <string name="logcat_clear">清除</string>
     <string name="logcat_share">分享日志</string>
     <string name="title_service_restart">服务重启</string>
-    <string name="title_del_all_config">删除配置</string>
+    <string name="title_del_all_config">清空列表</string>
     <string name="title_del_duplicate_config">删除重复配置</string>
     <string name="title_del_invalid_config">删除无效配置</string>
     <string name="title_export_all">将配置导出至剪贴板</string>
@@ -341,7 +341,7 @@
     <string name="toast_invalid_update_interval">更新间隔无效，最小值为 15 分钟。</string>
     <string name="title_sub_update">更新订阅</string>
     <string name="title_ping_all_server">测试 TCP 延迟（TCPing）</string>
-    <string name="title_real_ping_all_server">测试真连接延迟</string>
+    <string name="title_real_ping_all_server">测速</string>
     <string name="title_user_asset_setting">资源文件</string>
     <string name="title_sort_by_test_results">按测试结果排序</string>
     <string name="title_filter_config">过滤配置</string>

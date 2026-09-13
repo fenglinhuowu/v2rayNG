@@ -47,20 +47,9 @@ enum class MainDestination(@DrawableRes val iconRes: Int, @StringRes val labelRe
     About(R.drawable.ic_about_24dp, R.string.title_about)
 }
 
-private val primaryDrawerItems = listOf(
-    MainDestination.Subscriptions,
+private val drawerItems = listOf(
     MainDestination.PerAppProxy,
-    MainDestination.Routing,
-    MainDestination.UserAssets,
     MainDestination.Settings
-)
-
-private val drawerItems = primaryDrawerItems + listOf(
-    MainDestination.Promotion,
-    MainDestination.Logcat,
-    MainDestination.CheckUpdate,
-    MainDestination.BackupRestore,
-    MainDestination.About
 )
 
 @Composable
@@ -107,8 +96,7 @@ fun MainDrawerContent(drawerState: DrawerState, onNavigate: (MainDestination) ->
                     )
                 }
             }
-            drawerItems.forEachIndexed { index, item ->
-                if (index == primaryDrawerItems.size) AppDivider()
+            drawerItems.forEach { item ->
                 NavigationDrawerItem(
                     label = { Text(stringResource(item.labelRes)) },
                     selected = false,

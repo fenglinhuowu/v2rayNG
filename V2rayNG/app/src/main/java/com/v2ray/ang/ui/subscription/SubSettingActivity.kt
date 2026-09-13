@@ -195,16 +195,6 @@ fun SubSettingScreen(
                                 modifier = Modifier.padding(start = 8.dp)
                             ) {
                                 Row {
-                                    if (subCache.subscription.url.isNotEmpty()) {
-                                        IconButton(onClick = {
-                                            shareTarget = Pair(subCache.guid, subCache.subscription.url)
-                                        }) {
-                                            Icon(
-                                                painter = painterResource(R.drawable.ic_share_24dp),
-                                                contentDescription = stringResource(R.string.acc_share_subscription)
-                                            )
-                                        }
-                                    }
                                     IconButton(onClick = { onEditSub(subCache.guid) }) {
                                         Icon(
                                             painter = painterResource(R.drawable.ic_edit_24dp),

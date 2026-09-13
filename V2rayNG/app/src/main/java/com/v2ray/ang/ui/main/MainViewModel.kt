@@ -19,6 +19,7 @@ import com.v2ray.ang.extension.matchesPattern
 import com.v2ray.ang.extension.moveItem
 import com.v2ray.ang.ui.base.BaseViewModel
 import com.v2ray.ang.util.LogUtil
+import com.v2ray.ang.util.Utils
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineDispatcher
@@ -847,16 +848,36 @@ class MainViewModel(
         launchLoading {
             withContext(ioDispatcher) {
                 val result = dataSource.fetchVpnNodes()
-                withContext(Dispatchers.Main) {
-                    result.onSuccess { nodes ->
-                        if (nodes.isNotEmpty()) {
-                            Utils.setClipboard(app, nodes)
-                            toastSuccess(R.string.toast_fetch_nodes_success)
-                        } else {
+                result.onSuccess { nodes ->
+                    if (nodes.isNotEmpty()) {
+                        try {
+                            val (count, countSub) = dataSource.importBatchConfig(
+                                nodes, uiState.value.selectedGroupId, true
+                            )
+                            withContext(Dispatchers.Main) {
+                                when {
+                                    count > 0 -> {
+                                        toast(dataSource.getString(R.string.title_import_config_count, count))
+                                        setupGroupTab(forceRefresh = true)
+                                    }
+                                    countSub > 0 -> setupGroupTab(forceRefresh = true)
+                                    else -> toastError(R.string.toast_failure)
+                                }
+                            }
+                        } catch (e: Exception) {
+                            LogUtil.e(AppConfig.TAG, "Failed to import batch config from vpn nodes", e)
+                            withContext(Dispatchers.Main) {
+                                toastError(R.string.toast_failure)
+                            }
+                        }
+                    } else {
+                        withContext(Dispatchers.Main) {
                             toast(R.string.toast_none_data)
                         }
-                    }.onFailure {
-                        toastError(it.message ?: "Fetch nodes failed")
+                    }
+                }.onFailure { error ->
+                    withContext(Dispatchers.Main) {
+                        toastError(error.message ?: "Fetch nodes failed")
                     }
                 }
             }
