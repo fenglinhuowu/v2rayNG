@@ -18,6 +18,7 @@ import com.v2ray.ang.extension.isComplexType
 import com.v2ray.ang.extension.matchesPattern
 import com.v2ray.ang.extension.moveItem
 import com.v2ray.ang.ui.base.BaseViewModel
+import com.v2ray.ang.util.JsonUtil
 import com.v2ray.ang.util.LogUtil
 import com.v2ray.ang.util.Utils
 import kotlinx.coroutines.CancellationException
@@ -58,10 +59,27 @@ class MainViewModel(
             confirmRemove = dataSource.getConfirmRemove(),
             doubleColumnDisplay = dataSource.getDoubleColumnDisplay(),
             isLoggedIn = dataSource.getVpnAccessToken().isNotEmpty(),
-            vpnUserEmail = dataSource.getVpnUserEmail()
+            vpnUserEmail = dataSource.getVpnUserEmail(),
+            userType = parseUserType(dataSource.getVpnUserData())
         )
     )
     val uiState: StateFlow<MainUiState> = _uiState.asStateFlow()
+
+    private fun parseUserType(userData: String?): String? {
+        if (userData.isNullOrBlank()) return null
+        return try {
+            JsonUtil.parseString(userData)?.asJsonObject?.get("user_type")?.asString
+        } catch (e: Exception) {
+            LogUtil.e(AppConfig.TAG, "Failed to parse user type", e)
+            null
+        }
+    }
+
+    private fun checkMembership(): Boolean {
+        if (uiState.value.userType == "member") return true
+        toast(R.string.toast_member_only)
+        return false
+    }
 
     // ---------- Keyword filtering ----------
     @Volatile
@@ -739,6 +757,7 @@ class MainViewModel(
     }
 
     fun testAllRealPing(onlyTcp: Boolean = false) {
+        if (!checkMembership()) return
         dataSource.cancelAllPing()
         val groupId = uiState.value.selectedGroupId
         val servers = currentServers()
@@ -781,6 +800,7 @@ class MainViewModel(
     }
 
     fun testCurrentServerRealPing() {
+        if (!checkMembership()) return
         _uiState.update { it.copy(status = MainStatus.Testing) }
         dataSource.testCurrentServerRealPing()
     }
@@ -825,12 +845,13 @@ class MainViewModel(
             withContext(ioDispatcher) {
                 val result = dataSource.vpnAuth(email, password, isRegister)
                 withContext(Dispatchers.Main) {
-                    result.onSuccess { token ->
-                        dataSource.saveVpnUser(email, token)
+                    result.onSuccess { (token, userJson) ->
+                        dataSource.saveVpnUser(email, token, userJson)
                         _uiState.update {
                             it.copy(
                                 isLoggedIn = true,
                                 vpnUserEmail = email,
+                                userType = parseUserType(userJson),
                                 showAuthDialog = false
                             )
                         }
@@ -885,9 +906,16 @@ class MainViewModel(
     }
 
     private fun logout() {
-        dataSource.clearVpnUser()
-        _uiState.update { it.copy(isLoggedIn = false, vpnUserEmail = "") }
-        toast(R.string.toast_logout_success)
+        launchLoading {
+            withContext(ioDispatcher) {
+                dataSource.vpnLogout()
+                dataSource.clearVpnUser()
+                withContext(Dispatchers.Main) {
+                    _uiState.update { it.copy(isLoggedIn = false, vpnUserEmail = "", userType = null) }
+                    toast(R.string.toast_logout_success)
+                }
+            }
+        }
     }
 
     // ---------- Running state ----------

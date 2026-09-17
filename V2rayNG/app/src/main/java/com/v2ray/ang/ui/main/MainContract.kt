@@ -29,6 +29,7 @@ data class MainUiState(
     val shareQRCodeBitmap: android.graphics.Bitmap? = null,
     val isLoggedIn: Boolean = false,
     val vpnUserEmail: String = "",
+    val userType: String? = null,
     val showAuthDialog: Boolean = false
 )
 

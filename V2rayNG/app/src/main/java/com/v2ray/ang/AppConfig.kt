@@ -92,6 +92,7 @@ object AppConfig {
 
     const val PREF_VPN_USER_EMAIL = "pref_vpn_user_email"
     const val PREF_VPN_ACCESS_TOKEN = "pref_vpn_access_token"
+    const val PREF_VPN_USER_DATA = "pref_vpn_user_data"
     const val VPN_API_BASE_URL = "https://api.mianshitongguo.com"
 
     /** Cache keys. */

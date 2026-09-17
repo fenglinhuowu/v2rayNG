@@ -70,13 +70,16 @@ fun ImportMenuContent(onAction: (MainAction) -> Unit) = AppDropdownMenuItems(
 
 @Composable
 fun MoreMenuContent(isLoggedIn: Boolean, onSelected: (MainMoreMenuAction) -> Unit) = AppDropdownMenuItems(
-    items = listOf(
-        MainMoreMenuAction.RestartService,
-        MainMoreMenuAction.DeleteAll,
-        MainMoreMenuAction.TestAllRealPing,
-        MainMoreMenuAction.PerAppProxy,
-        MainMoreMenuAction.Settings
-    ),
+    items = buildList {
+        add(MainMoreMenuAction.RestartService)
+        add(MainMoreMenuAction.DeleteAll)
+        add(MainMoreMenuAction.TestAllRealPing)
+        add(MainMoreMenuAction.PerAppProxy)
+        add(MainMoreMenuAction.Settings)
+        if (isLoggedIn) {
+            add(MainMoreMenuAction.Logout)
+        }
+    },
     labelRes = { it.labelRes },
     onSelected = onSelected
 )

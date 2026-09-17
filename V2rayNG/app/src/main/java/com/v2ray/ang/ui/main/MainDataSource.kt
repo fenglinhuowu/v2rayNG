@@ -66,9 +66,11 @@ interface MainDataSource : Closeable {
 
     fun getVpnUserEmail(): String
     fun getVpnAccessToken(): String
-    fun saveVpnUser(email: String, token: String)
+    fun getVpnUserData(): String?
+    fun saveVpnUser(email: String, token: String, userData: String)
     fun clearVpnUser()
 
-    suspend fun vpnAuth(email: String, password: String, isRegister: Boolean): Result<String>
+    suspend fun vpnAuth(email: String, password: String, isRegister: Boolean): Result<Pair<String, String>>
+    suspend fun vpnLogout(): Result<Unit>
     suspend fun fetchVpnNodes(): Result<String>
 }

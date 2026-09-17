@@ -237,17 +237,22 @@ class MainRepository(
     override fun getVpnAccessToken(): String =
         MmkvManager.decodeSettingsString(AppConfig.PREF_VPN_ACCESS_TOKEN, "").orEmpty()
 
-    override fun saveVpnUser(email: String, token: String) {
+    override fun getVpnUserData(): String? =
+        MmkvManager.decodeSettingsString(AppConfig.PREF_VPN_USER_DATA)
+
+    override fun saveVpnUser(email: String, token: String, userData: String) {
         MmkvManager.encodeSettings(AppConfig.PREF_VPN_USER_EMAIL, email)
         MmkvManager.encodeSettings(AppConfig.PREF_VPN_ACCESS_TOKEN, token)
+        MmkvManager.encodeSettings(AppConfig.PREF_VPN_USER_DATA, userData)
     }
 
     override fun clearVpnUser() {
         MmkvManager.removeSettings(AppConfig.PREF_VPN_USER_EMAIL)
         MmkvManager.removeSettings(AppConfig.PREF_VPN_ACCESS_TOKEN)
+        MmkvManager.removeSettings(AppConfig.PREF_VPN_USER_DATA)
     }
 
-    override suspend fun vpnAuth(email: String, password: String, isRegister: Boolean): Result<String> {
+    override suspend fun vpnAuth(email: String, password: String, isRegister: Boolean): Result<Pair<String, String>> {
         val client = OkHttpClient()
         val mediaType = "application/json; charset=utf-8".toMediaType()
         val path = if (isRegister) "/v1/vpn/auth/register" else "/v1/vpn/auth/login"
@@ -261,11 +266,37 @@ class MainRepository(
             client.newCall(request).execute().use { response ->
                 val body = response.body?.string() ?: ""
                 if (response.isSuccessful) {
-                    val token = JsonUtil.parseString(body)?.get("access_token")?.asString ?: ""
-                    Result.success(token)
+                    val jsonObj = JsonUtil.parseString(body)?.asJsonObject
+                    val token = jsonObj?.get("access_token")?.asString ?: ""
+                    val userJson = jsonObj?.get("user")?.let { JsonUtil.toJson(it) } ?: ""
+                    Result.success(Pair(token, userJson))
                 } else {
                     val error = JsonUtil.parseString(body)?.get("error")?.asString ?: response.message
                     Result.failure(Exception(error))
+                }
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    override suspend fun vpnLogout(): Result<Unit> {
+        val token = getVpnAccessToken()
+        if (token.isEmpty()) return Result.success(Unit)
+
+        val client = OkHttpClient()
+        val request = Request.Builder()
+            .url("${AppConfig.VPN_API_BASE_URL}/v1/vpn/auth/logout")
+            .header("Authorization", "Bearer $token")
+            .post("".toRequestBody())
+            .build()
+
+        return try {
+            client.newCall(request).execute().use { response ->
+                if (response.isSuccessful) {
+                    Result.success(Unit)
+                } else {
+                    Result.failure(Exception(response.message))
                 }
             }
         } catch (e: Exception) {
