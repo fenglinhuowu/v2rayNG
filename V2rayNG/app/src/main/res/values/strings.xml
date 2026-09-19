@@ -413,7 +413,12 @@
     <string name="toast_login_success">Login successful</string>
     <string name="toast_register_success">Registration successful</string>
     <string name="toast_logout_success">Logged out</string>
-    <string name="toast_member_only">请联系客服开通会员</string>
+    <string name="toast_member_only">Member only</string>
+    <string name="toast_recharge_waiting">Please wait, nodes will be updated once confirmed.</string>
+    <string name="title_recharge">Blockchain Recharge</string>
+    <string name="recharge_address">Recharge Address</string>
+    <string name="recharge_tip">Please transfer the corresponding amount to the following address to open membership.</string>
+    <string name="action_recharge_done">I have completed the recharge</string>
     <string name="toast_fetch_nodes_success">Nodes links copied to clipboard</string>
     <string name="title_fragment_settings">Fragment Settings</string>
     <string name="title_pref_fragment_packets">Fragment Packets</string>

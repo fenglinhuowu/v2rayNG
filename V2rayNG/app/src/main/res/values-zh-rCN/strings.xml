@@ -412,7 +412,12 @@
     <string name="toast_login_success">登录成功</string>
     <string name="toast_register_success">注册成功</string>
     <string name="toast_logout_success">已退出登录</string>
-    <string name="toast_member_only">请联系客服开通会员</string>
+    <string name="toast_member_only">仅限会员</string>
+    <string name="toast_recharge_waiting">请耐心等候，确认完成会更新节点列表</string>
+    <string name="title_recharge">区块链充值</string>
+    <string name="recharge_address">收款地址</string>
+    <string name="recharge_tip">请向以下地址转入相应金额以开通会员。</string>
+    <string name="action_recharge_done">我已经完成充值</string>
     <string name="toast_fetch_nodes_success">节点链接已复制到剪贴板</string>
     <string name="title_fragment_settings">分片（Fragment）设置</string>
     <string name="title_pref_fragment_packets">分片方式</string>

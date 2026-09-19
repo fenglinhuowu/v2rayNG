@@ -77,7 +77,7 @@ class MainViewModel(
 
     private fun checkMembership(): Boolean {
         if (uiState.value.userType == "member") return true
-        toast(R.string.toast_member_only)
+        _uiState.update { it.copy(showRechargeDialog = true) }
         return false
     }
 
@@ -243,6 +243,10 @@ class MainViewModel(
             is MainAction.AuthRegister -> vpnAuth(action.email.lowercase().trim(), action.password, true)
             MainAction.RefreshNodes -> refreshVpnNodes()
             MainAction.Logout -> logout()
+
+            MainAction.ShowRechargeDialog -> _uiState.update { it.copy(showRechargeDialog = true) }
+            MainAction.DismissRechargeDialog -> _uiState.update { it.copy(showRechargeDialog = false) }
+            MainAction.CheckRechargeStatus -> checkRechargeStatus()
 
             MainAction.ToggleService,
             MainAction.TestCurrentServer,
@@ -913,6 +917,28 @@ class MainViewModel(
                 withContext(Dispatchers.Main) {
                     _uiState.update { it.copy(isLoggedIn = false, vpnUserEmail = "", userType = null) }
                     toast(R.string.toast_logout_success)
+                }
+            }
+        }
+    }
+
+    private fun checkRechargeStatus() {
+        viewModelScope.launch {
+            toast(R.string.toast_recharge_waiting)
+            delay(5000) // Show toast for 5 seconds
+            withContext(ioDispatcher) {
+                val result = dataSource.checkRechargeStatus()
+                withContext(Dispatchers.Main) {
+                    result.onSuccess { recharged ->
+                        if (recharged) {
+                            _uiState.update { it.copy(showRechargeDialog = false) }
+                            refreshVpnNodes()
+                        } else {
+                            toastError("Recharge not confirmed yet")
+                        }
+                    }.onFailure {
+                        toastError(it.message ?: "Failed to check recharge status")
+                    }
                 }
             }
         }

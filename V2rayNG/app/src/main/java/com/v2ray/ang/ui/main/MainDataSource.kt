@@ -72,5 +72,6 @@ interface MainDataSource : Closeable {
 
     suspend fun vpnAuth(email: String, password: String, isRegister: Boolean): Result<Pair<String, String>>
     suspend fun vpnLogout(): Result<Unit>
+    suspend fun checkRechargeStatus(): Result<Boolean>
     suspend fun fetchVpnNodes(): Result<String>
 }

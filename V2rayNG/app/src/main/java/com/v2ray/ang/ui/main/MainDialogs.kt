@@ -130,3 +130,61 @@ fun AuthDialog(
         containerColor = MaterialTheme.colorScheme.surface
     )
 }
+
+@Composable
+fun RechargeDialog(
+    onDismiss: () -> Unit,
+    onRechargeDone: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(R.string.title_recharge)) },
+        text = {
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                Text(
+                    text = stringResource(R.string.recharge_tip),
+                    style = MaterialTheme.typography.bodyMedium
+                )
+                Column(
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(
+                        text = stringResource(R.string.recharge_address),
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Surface(
+                        color = MaterialTheme.colorScheme.surfaceVariant,
+                        shape = MaterialTheme.shapes.small,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text(
+                            text = "123456789",
+                            modifier = Modifier.padding(8.dp),
+                            style = MaterialTheme.typography.bodyLarge
+                        )
+                    }
+                }
+                Text(
+                    text = "USDT-TRC20",
+                    style = MaterialTheme.typography.labelLarge,
+                    color = MaterialTheme.colorScheme.primary
+                )
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onRechargeDone) {
+                Text(stringResource(R.string.action_recharge_done))
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text(stringResource(R.string.action_cancel))
+            }
+        },
+        containerColor = MaterialTheme.colorScheme.surface
+    )
+}

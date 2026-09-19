@@ -50,7 +50,9 @@ fun MainScreen(
     val shareQRCodeBitmap = uiState.shareQRCodeBitmap
     val isLoggedIn = uiState.isLoggedIn
     val vpnUserEmail = uiState.vpnUserEmail
+    val userType = uiState.userType
     val showAuthDialog = uiState.showAuthDialog
+    val showRechargeDialog = uiState.showRechargeDialog
 
     val isDarkTheme = LocalDarkTheme.current
     val drawerState = rememberDrawerState(DrawerValue.Closed)
@@ -138,6 +140,13 @@ fun MainScreen(
             onDismiss = { onAction(MainAction.DismissAuthDialog) },
             onLogin = { email, password -> onAction(MainAction.AuthLogin(email, password)) },
             onRegister = { email, password -> onAction(MainAction.AuthRegister(email, password)) }
+        )
+    }
+
+    if (showRechargeDialog) {
+        RechargeDialog(
+            onDismiss = { onAction(MainAction.DismissRechargeDialog) },
+            onRechargeDone = { onAction(MainAction.CheckRechargeStatus) }
         )
     }
 

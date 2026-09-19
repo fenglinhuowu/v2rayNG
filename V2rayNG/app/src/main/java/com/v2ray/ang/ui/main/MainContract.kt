@@ -30,7 +30,8 @@ data class MainUiState(
     val isLoggedIn: Boolean = false,
     val vpnUserEmail: String = "",
     val userType: String? = null,
-    val showAuthDialog: Boolean = false
+    val showAuthDialog: Boolean = false,
+    val showRechargeDialog: Boolean = false
 )
 
 /**
@@ -78,4 +79,8 @@ sealed interface MainAction {
     data class AuthRegister(val email: String, val password: String) : MainAction
     data object RefreshNodes : MainAction
     data object Logout : MainAction
+
+    data object ShowRechargeDialog : MainAction
+    data object DismissRechargeDialog : MainAction
+    data object CheckRechargeStatus : MainAction
 }
