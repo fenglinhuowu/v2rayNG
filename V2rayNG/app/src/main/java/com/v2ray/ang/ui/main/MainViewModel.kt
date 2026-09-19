@@ -78,6 +78,7 @@ class MainViewModel(
     private fun checkMembership(): Boolean {
         if (uiState.value.userType == "member") return true
         _uiState.update { it.copy(showRechargeDialog = true) }
+        fetchRechargeAddress()
         return false
     }
 
@@ -925,20 +926,48 @@ class MainViewModel(
     private fun checkRechargeStatus() {
         viewModelScope.launch {
             toast(R.string.toast_recharge_waiting)
-            delay(5000) // Show toast for 5 seconds
-            withContext(ioDispatcher) {
-                val result = dataSource.checkRechargeStatus()
-                withContext(Dispatchers.Main) {
-                    result.onSuccess { recharged ->
-                        if (recharged) {
-                            _uiState.update { it.copy(showRechargeDialog = false) }
-                            refreshVpnNodes()
-                        } else {
-                            toastError("Recharge not confirmed yet")
+            val address = uiState.value.rechargeAddress.orEmpty()
+            if (address.isEmpty()) return@launch
+
+            var success = false
+            for (i in 1..60) {
+                delay(5000)
+                val checkResult = withContext(ioDispatcher) { dataSource.checkRechargeStatus(address) }
+                if (checkResult.getOrDefault(false)) {
+                    val syncResult = withContext(ioDispatcher) { dataSource.syncMemberRecharges() }
+                    if (syncResult.isSuccess) {
+                        val userResult = withContext(ioDispatcher) { dataSource.fetchCurrentUser() }
+                        userResult.onSuccess { userJson ->
+                            dataSource.updateVpnUserData(userJson)
+                            withContext(Dispatchers.Main) {
+                                _uiState.update {
+                                    it.copy(
+                                        userType = parseUserType(userJson),
+                                        showRechargeDialog = false
+                                    )
+                                }
+                                refreshVpnNodes()
+                            }
+                            success = true
                         }
-                    }.onFailure {
-                        toastError(it.message ?: "Failed to check recharge status")
                     }
+                    if (success) break
+                }
+            }
+            if (!success) {
+                toastError("Recharge not confirmed yet")
+            }
+        }
+    }
+
+    private fun fetchRechargeAddress() {
+        viewModelScope.launch(ioDispatcher) {
+            val result = dataSource.fetchWalletAddress()
+            withContext(Dispatchers.Main) {
+                result.onSuccess { address ->
+                    _uiState.update { it.copy(rechargeAddress = address) }
+                }.onFailure {
+                    toastError(it.message ?: "Failed to fetch recharge address")
                 }
             }
         }

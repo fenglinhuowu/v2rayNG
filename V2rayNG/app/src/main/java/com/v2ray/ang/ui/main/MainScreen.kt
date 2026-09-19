@@ -53,6 +53,7 @@ fun MainScreen(
     val userType = uiState.userType
     val showAuthDialog = uiState.showAuthDialog
     val showRechargeDialog = uiState.showRechargeDialog
+    val rechargeAddress = uiState.rechargeAddress
 
     val isDarkTheme = LocalDarkTheme.current
     val drawerState = rememberDrawerState(DrawerValue.Closed)
@@ -145,6 +146,7 @@ fun MainScreen(
 
     if (showRechargeDialog) {
         RechargeDialog(
+            address = rechargeAddress.orEmpty(),
             onDismiss = { onAction(MainAction.DismissRechargeDialog) },
             onRechargeDone = { onAction(MainAction.CheckRechargeStatus) }
         )

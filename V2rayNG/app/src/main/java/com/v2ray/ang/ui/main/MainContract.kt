@@ -31,7 +31,8 @@ data class MainUiState(
     val vpnUserEmail: String = "",
     val userType: String? = null,
     val showAuthDialog: Boolean = false,
-    val showRechargeDialog: Boolean = false
+    val showRechargeDialog: Boolean = false,
+    val rechargeAddress: String? = null
 )
 
 /**

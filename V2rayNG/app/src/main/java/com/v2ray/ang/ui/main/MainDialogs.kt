@@ -10,6 +10,7 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
+import androidx.compose.material3.Surface
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -133,6 +134,7 @@ fun AuthDialog(
 
 @Composable
 fun RechargeDialog(
+    address: String,
     onDismiss: () -> Unit,
     onRechargeDone: () -> Unit
 ) {
@@ -162,7 +164,7 @@ fun RechargeDialog(
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         Text(
-                            text = "123456789",
+                            text = address.ifBlank { "..." },
                             modifier = Modifier.padding(8.dp),
                             style = MaterialTheme.typography.bodyLarge
                         )

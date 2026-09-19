@@ -246,6 +246,40 @@ class MainRepository(
         MmkvManager.encodeSettings(AppConfig.PREF_VPN_USER_DATA, userData)
     }
 
+    override fun clearVpnUser() {
+        MmkvManager.removeSettings(AppConfig.PREF_VPN_USER_EMAIL)
+        MmkvManager.removeSettings(AppConfig.PREF_VPN_ACCESS_TOKEN)
+        MmkvManager.removeSettings(AppConfig.PREF_VPN_USER_DATA)
+    }
+
+    override suspend fun vpnAuth(email: String, password: String, isRegister: Boolean): Result<Pair<String, String>> {
+        val client = OkHttpClient()
+        val mediaType = "application/json; charset=utf-8".toMediaType()
+        val path = if (isRegister) "/v1/vpn/auth/register" else "/v1/vpn/auth/login"
+        val json = JsonUtil.toJson(mapOf("email" to email, "password" to password))
+        val request = Request.Builder()
+            .url("${AppConfig.VPN_API_BASE_URL}$path")
+            .post(json.toRequestBody(mediaType))
+            .build()
+
+        return try {
+            client.newCall(request).execute().use { response ->
+                val body = response.body?.string() ?: ""
+                if (response.isSuccessful) {
+                    val jsonObj = JsonUtil.parseString(body)?.asJsonObject
+                    val token = jsonObj?.get("access_token")?.asString ?: ""
+                    val userJson = jsonObj?.get("user")?.let { JsonUtil.toJson(it) } ?: ""
+                    Result.success(Pair(token, userJson))
+                } else {
+                    val error = JsonUtil.parseString(body)?.get("error")?.asString ?: response.message
+                    Result.failure(Exception(error))
+                }
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
     override suspend fun vpnLogout(): Result<Unit> {
         val token = getVpnAccessToken()
         if (token.isEmpty()) return Result.success(Unit)
@@ -270,14 +304,13 @@ class MainRepository(
         }
     }
 
-    override suspend fun checkRechargeStatus(): Result<Boolean> {
+    override suspend fun fetchWalletAddress(): Result<String> {
         val token = getVpnAccessToken()
         if (token.isEmpty()) return Result.failure(Exception("Not logged in"))
 
         val client = OkHttpClient()
-        // This is a placeholder for a public blockchain explorer API or a backend endpoint
         val request = Request.Builder()
-            .url("${AppConfig.VPN_API_BASE_URL}/v1/vpn/recharge/status")
+            .url("${AppConfig.VPN_API_BASE_URL}/v1/vpn/wallet-addresses")
             .header("Authorization", "Bearer $token")
             .get()
             .build()
@@ -286,8 +319,8 @@ class MainRepository(
             client.newCall(request).execute().use { response ->
                 val body = response.body?.string() ?: ""
                 if (response.isSuccessful) {
-                    val isDone = JsonUtil.parseString(body)?.asJsonObject?.get("recharged")?.asBoolean ?: false
-                    Result.success(isDone)
+                    val address = JsonUtil.parseString(body)?.asJsonObject?.get("address")?.asString ?: ""
+                    Result.success(address)
                 } else {
                     Result.failure(Exception(response.message))
                 }
@@ -295,6 +328,98 @@ class MainRepository(
         } catch (e: Exception) {
             Result.failure(e)
         }
+    }
+
+    override suspend fun checkRechargeStatus(address: String): Result<Boolean> {
+        if (address.isEmpty()) return Result.failure(Exception("Recharge address is empty"))
+
+        val client = OkHttpClient()
+        val url = "https://api.trongrid.io/v1/accounts/$address/transactions/trc20?limit=1&only_to=true"
+        val request = Request.Builder()
+            .url(url)
+            .get()
+            .build()
+
+        return try {
+            client.newCall(request).execute().use { response ->
+                val body = response.body?.string() ?: ""
+                if (response.isSuccessful) {
+                    val jsonObj = JsonUtil.parseString(body)?.asJsonObject
+                    val data = jsonObj?.getAsJsonArray("data")
+                    if (data != null && data.size() > 0) {
+                        val latestTx = data.get(0).asJsonObject
+                        val tokenInfo = latestTx.getAsJsonObject("token_info")
+                        val symbol = tokenInfo?.get("symbol")?.asString
+                        val timestamp = latestTx.get("block_timestamp")?.asLong ?: 0L
+                        
+                        val isUsdt = symbol == "USDT"
+                        val isRecent = (System.currentTimeMillis() - timestamp) < 30 * 60 * 1000 // 30 minutes
+
+                        Result.success(isUsdt && isRecent)
+                    } else {
+                        Result.success(false)
+                    }
+                } else {
+                    Result.failure(Exception(response.message))
+                }
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    override suspend fun syncMemberRecharges(): Result<Unit> {
+        val token = getVpnAccessToken()
+        if (token.isEmpty()) return Result.failure(Exception("Not logged in"))
+
+        val client = OkHttpClient()
+        val request = Request.Builder()
+            .url("${AppConfig.VPN_API_BASE_URL}/v1/vpn/member-recharges/sync")
+            .header("Authorization", "Bearer $token")
+            .post("".toRequestBody())
+            .build()
+
+        return try {
+            client.newCall(request).execute().use { response ->
+                if (response.isSuccessful) {
+                    Result.success(Unit)
+                } else {
+                    Result.failure(Exception(response.message))
+                }
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    override suspend fun fetchCurrentUser(): Result<String> {
+        val token = getVpnAccessToken()
+        if (token.isEmpty()) return Result.failure(Exception("Not logged in"))
+
+        val client = OkHttpClient()
+        val request = Request.Builder()
+            .url("${AppConfig.VPN_API_BASE_URL}/v1/vpn/me")
+            .header("Authorization", "Bearer $token")
+            .get()
+            .build()
+
+        return try {
+            client.newCall(request).execute().use { response ->
+                val body = response.body?.string() ?: ""
+                if (response.isSuccessful) {
+                    val userJson = JsonUtil.parseString(body)?.asJsonObject?.get("user")?.let { JsonUtil.toJson(it) } ?: ""
+                    Result.success(userJson)
+                } else {
+                    Result.failure(Exception(response.message))
+                }
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    override fun updateVpnUserData(userData: String) {
+        MmkvManager.encodeSettings(AppConfig.PREF_VPN_USER_DATA, userData)
     }
 
     override suspend fun fetchVpnNodes(): Result<String> {
